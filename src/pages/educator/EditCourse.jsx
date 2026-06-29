@@ -9,6 +9,7 @@ import { useToast } from "../../hooks/useToast";
 import Skeleton from "../../components/Skeleton";
 import DragHandle from "../../components/DragHandle";
 import VideoAssetLibrary from "../../components/educator/VideoAssetLibrary";
+import QuizBuilder from "../../components/educator/QuizBuilder";
 import * as courseService from "../../services/courseService";
 import * as categoryService from "../../services/categoryService";
 
@@ -38,6 +39,7 @@ const EditCourse = () => {
   const [submitError, setSubmitError] = useState("");
   const [fetchError, setFetchError] = useState("");
   const [showVideoLibrary, setShowVideoLibrary] = useState(false);
+  const [quizBuilderLessonId, setQuizBuilderLessonId] = useState(null);
 
   const [lectureDetails, setLectureDetails] = useState({
     lectureTitle: "",
@@ -576,6 +578,15 @@ const EditCourse = () => {
                         — {lecture.isPreviewFree ? "Free Preview" : "Paid"}
                       </span>
                       <div className="flex items-center gap-2">
+                        {isPersistedId(lecture.lectureId) && (
+                          <button
+                            type="button"
+                            onClick={() => setQuizBuilderLessonId(lecture.lectureId)}
+                            className="text-[10px] text-purple-600 hover:text-purple-800 px-1.5 py-0.5 border border-purple-200 rounded"
+                          >
+                            Quiz
+                          </button>
+                        )}
                         <DragHandle
                           canMoveUp={lectureIndex > 0}
                           canMoveDown={
@@ -704,6 +715,18 @@ const EditCourse = () => {
                     Upload Video
                   </button>
                 </div>
+                <div className="mb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPopup(false);
+                      setShowQuizBuilder(true);
+                    }}
+                    className="text-xs text-purple-600 hover:text-purple-800 mt-1"
+                  >
+                    Add Quiz
+                  </button>
+                </div>
 
                 <div className="flex gap-2 my-4">
                   <p>Is Preview Free?</p>
@@ -785,6 +808,19 @@ const EditCourse = () => {
           </button>
         </div>
       </form>
+
+      {quizBuilderLessonId && (
+        <QuizBuilder
+          courseId={courseId}
+          lessonId={quizBuilderLessonId}
+          lessonTitle={
+            chapters
+              .flatMap((c) => c.chapterContent)
+              .find((l) => l.lectureId === quizBuilderLessonId)?.lectureTitle || ""
+          }
+          onClose={() => setQuizBuilderLessonId(null)}
+        />
+      )}
     </div>
   );
 };

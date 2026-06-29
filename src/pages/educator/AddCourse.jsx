@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import { AppContext } from "../../context/AppContext";
 import { useToast } from "../../hooks/useToast";
 import DragHandle from "../../components/DragHandle";
+import QuizBuilder from "../../components/educator/QuizBuilder";
 import * as courseService from "../../services/courseService";
 import * as categoryService from "../../services/categoryService";
 
@@ -31,6 +32,7 @@ const AddCourse = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [showVideoLibrary, setShowVideoLibrary] = useState(false);
+  const [showQuizBuilder, setShowQuizBuilder] = useState(false);
 
   const [lectureDetails, setLectureDetails] = useState({
     lectureTitle: "",
@@ -572,6 +574,18 @@ const AddCourse = () => {
                     Upload Video
                   </button>
                 </div>
+                <div className="mb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPopup(false);
+                      setShowQuizBuilder(true);
+                    }}
+                    className="text-xs text-purple-600 hover:text-purple-800 mt-1"
+                  >
+                    Add Quiz
+                  </button>
+                </div>
 
                 <div className="flex gap-2 my-4">
                   <p>Is Preview Free?</p>
@@ -643,6 +657,15 @@ const AddCourse = () => {
           {isSubmitting ? "Creating..." : "ADD"}
         </button>
       </form>
+
+      {showQuizBuilder && (
+        <QuizBuilder
+          courseId=""
+          lessonId=""
+          lessonTitle=""
+          onClose={() => setShowQuizBuilder(false)}
+        />
+      )}
     </div>
   );
 };
