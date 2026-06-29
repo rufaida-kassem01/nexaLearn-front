@@ -6,6 +6,7 @@ import Footer from "../../components/student/Footer";
 const sidebarItems = [
   { name: "Dashboard", path: "/admin", icon: assets.home_icon },
   { name: "Categories", path: "/admin/categories", icon: assets.add_icon },
+  { name: "Applications", path: "/admin/instructor-applications", icon: assets.user_icon },
 ];
 
 const AdminSidebar = () => (
