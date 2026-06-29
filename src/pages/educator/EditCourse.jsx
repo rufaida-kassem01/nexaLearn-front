@@ -786,6 +786,20 @@ const EditCourse = () => {
               <VideoAssetLibrary
                 courseId={courseId}
                 chapters={chapters}
+                onAssetAssigned={(asset) => {
+                  if (asset.lessonId) {
+                    setChapters((prev) =>
+                      prev.map((ch) => ({
+                        ...ch,
+                        chapterContent: ch.chapterContent.map((lec) =>
+                          lec.lectureId === asset.lessonId
+                            ? { ...lec, lectureUrl: asset.playbackUrl || asset.lectureUrl || lec.lectureUrl }
+                            : lec
+                        ),
+                      }))
+                    );
+                  }
+                }}
               />
             </div>
           )}

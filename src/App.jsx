@@ -100,7 +100,7 @@ const App = () => {
             path="/educator"
             element={
               <ErrorBoundary>
-                <ProtectedRoute requiredRole="INSTRUCTOR">
+                <ProtectedRoute>
                   <Educator />
                 </ProtectedRoute>
               </ErrorBoundary>

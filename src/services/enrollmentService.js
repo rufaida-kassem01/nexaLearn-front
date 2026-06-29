@@ -5,7 +5,8 @@ export const checkEnrollment = async (courseId) => {
 };
 
 export const enrollFree = async (courseId) => {
-  return apiClient.post(`/courses/${courseId}/enroll`, {});
+  const idempotencyKey = crypto.randomUUID();
+  return apiClient.post(`/courses/${courseId}/enroll`, { idempotencyKey });
 };
 
 export const startCheckout = async (courseId) => {

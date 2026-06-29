@@ -7,6 +7,7 @@ import { AppContext } from "../../context/AppContext";
 import { useToast } from "../../hooks/useToast";
 import DragHandle from "../../components/DragHandle";
 import QuizBuilder from "../../components/educator/QuizBuilder";
+import VideoAssetLibrary from "../../components/educator/VideoAssetLibrary";
 import * as courseService from "../../services/courseService";
 import * as categoryService from "../../services/categoryService";
 
@@ -32,6 +33,7 @@ const AddCourse = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [showVideoLibrary, setShowVideoLibrary] = useState(false);
+  const [createdCourseId, setCreatedCourseId] = useState(null);
   const [showQuizBuilder, setShowQuizBuilder] = useState(false);
 
   const [lectureDetails, setLectureDetails] = useState({
@@ -225,7 +227,10 @@ const AddCourse = () => {
       // 4. Refresh the global course list so the educator sees the new course
       await fetchAllCourses();
 
-      // 5. Reset form
+      // 5. Store course ID for video management
+      setCreatedCourseId(course.id);
+
+      // 6. Reset form
       setCourseTitle("");
       setCourseSubtitle("");
       setCoursePrice(0);
@@ -642,9 +647,16 @@ const AddCourse = () => {
           </div>
           {showVideoLibrary && (
             <div className="mt-4">
-              <p className="text-sm text-gray-400">
-                Save the course first, then manage videos in the course editor.
-              </p>
+              {createdCourseId ? (
+                <VideoAssetLibrary
+                  courseId={createdCourseId}
+                  chapters={chapters}
+                />
+              ) : (
+                <p className="text-sm text-gray-400">
+                  Save the course first, then upload and assign videos here.
+                </p>
+              )}
             </div>
           )}
         </div>

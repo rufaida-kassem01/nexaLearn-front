@@ -25,6 +25,7 @@ const MyEnrollments = () => {
   const [error, setError] = useState("");
   const [downloading, setDownloading] = useState(null);
   const [refundCourseId, setRefundCourseId] = useState(null);
+  const [refundCourseTitle, setRefundCourseTitle] = useState("");
   const [refundLoading, setRefundLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -93,6 +94,7 @@ const MyEnrollments = () => {
         [refundCourseId]: { ...prev[refundCourseId], status: "REFUNDED" },
       }));
       setRefundCourseId(null);
+      setRefundCourseTitle("");
       toast.success("Refund requested. Your enrollment will be updated shortly.");
     } catch (err) {
       toast.error(err?.response?.data?.message || err.message || "Refund request failed.");
@@ -238,7 +240,10 @@ const MyEnrollments = () => {
                       )}
                       {enrollment?.status === "ACTIVE" && !course.isFree && Number(course.coursePrice) > 0 && (
                         <button
-                          onClick={() => setRefundCourseId(course._id)}
+                          onClick={() => {
+                            setRefundCourseId(course._id);
+                            setRefundCourseTitle(course.courseTitle);
+                          }}
                           className="block text-xs text-red-500 hover:text-red-700 hover:underline"
                         >
                           Request Refund
@@ -253,12 +258,14 @@ const MyEnrollments = () => {
         )}
       </div>
 
-      <RefundModal
-        courseTitle={courses.find((c) => c._id === refundCourseId)?.courseTitle || ""}
-        onConfirm={handleRefund}
-        onCancel={() => setRefundCourseId(null)}
-        isLoading={refundLoading}
-      />
+      {refundCourseId && (
+        <RefundModal
+          courseTitle={refundCourseTitle}
+          onConfirm={handleRefund}
+          onCancel={() => { setRefundCourseId(null); setRefundCourseTitle(""); }}
+          isLoading={refundLoading}
+        />
+      )}
 
       <Footer />
     </>
