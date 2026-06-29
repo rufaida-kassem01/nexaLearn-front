@@ -13,7 +13,10 @@ import AddCourse from "./pages/educator/AddCourse";
 import EditCourse from "./pages/educator/EditCourse";
 import Dashboard from "./pages/educator/Dashboard";
 import Educator from "./pages/educator/Educator";
+import LessonAnalytics from "./pages/educator/LessonAnalytics";
 import MyCourses from "./pages/educator/MyCourses";
+import QuizAnalytics from "./pages/educator/QuizAnalytics";
+import RevenueAnalytics from "./pages/educator/RevenueAnalytics";
 import StudentsEnrolled from "./pages/educator/StudentsEnrolled";
 import CheckoutPage from "./pages/student/CheckoutPage";
 import CourseDetails from "./pages/student/CourseDetails";
@@ -105,6 +108,9 @@ const App = () => {
             <Route path="edit-course/:courseId" element={<EditCourse />} />
             <Route path="my-courses" element={<MyCourses />} />
             <Route path="student-enrolled" element={<StudentsEnrolled />} />
+            <Route path="course/:courseId/analytics/lessons" element={<LessonAnalytics />} />
+            <Route path="course/:courseId/analytics/revenue" element={<RevenueAnalytics />} />
+            <Route path="course/:courseId/analytics/quiz-stats" element={<QuizAnalytics />} />
           </Route>
           </Routes>
         </div>

@@ -121,13 +121,13 @@ const MyCourses = () => {
                 <th className="px-4 py-3 font-semibold truncate">Students</th>
                 <th className="px-4 py-3 font-semibold truncate">Rating</th>
                 <th className="px-4 py-3 font-semibold truncate">Status</th>
-                <th className="px-4 py-3 font-semibold truncate" colSpan={3}>Actions</th>
+                <th className="px-4 py-3 font-semibold truncate" colSpan={4}>Actions</th>
               </tr>
             </thead>
             <tbody className="text-sm text-gray-500">
               {courses.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-gray-400">
+                  <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
                     No courses found.
                   </td>
                 </tr>
@@ -156,6 +156,14 @@ const MyCourses = () => {
                       >
                         {course.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => navigate(`/educator/course/${course.courseId}/analytics/lessons`)}
+                        className="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded transition"
+                      >
+                        Analytics
+                      </button>
                     </td>
                     <td className="px-4 py-3">
                       <button
