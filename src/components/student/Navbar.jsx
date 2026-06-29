@@ -4,6 +4,7 @@ import { assets } from "../../assets/assets";
 import { AppContext } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { getStreak } from "../../services/streakService";
+import NotificationBell from "../NotificationBell";
 
 const UserMenu = ({ user, onSignOut }) => {
   const [open, setOpen] = useState(false);
@@ -113,7 +114,10 @@ const Navbar = () => {
           </>
         )}
         {user ? (
-          <UserMenu user={user} onSignOut={handleSignOut} />
+          <>
+            <NotificationBell />
+            <UserMenu user={user} onSignOut={handleSignOut} />
+          </>
         ) : (
           <div className="flex items-center gap-3">
             <Link
@@ -152,7 +156,10 @@ const Navbar = () => {
           </div>
         )}
         {user ? (
-          <UserMenu user={user} onSignOut={handleSignOut} />
+          <>
+            <NotificationBell />
+            <UserMenu user={user} onSignOut={handleSignOut} />
+          </>
         ) : (
           <Link to="/login">
             <img src={assets.user_icon} alt="Sign in" />
