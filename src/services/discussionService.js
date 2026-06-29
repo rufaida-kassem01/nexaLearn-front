@@ -27,3 +27,19 @@ export const upvoteThread = async (lessonId, threadId) => {
 export const upvotePost = async (lessonId, threadId, postId) => {
   return apiClient.post(`/lessons/${lessonId}/discussions/${threadId}/posts/${postId}/upvote`);
 };
+
+export const acceptPost = async (lessonId, threadId, postId) => {
+  return apiClient.post(`/lessons/${lessonId}/discussions/${threadId}/posts/${postId}/accept`);
+};
+
+export const pinThread = async (lessonId, threadId) => {
+  return apiClient.post(`/lessons/${lessonId}/discussions/${threadId}/pin`);
+};
+
+export const unpinThread = async (lessonId, threadId) => {
+  return apiClient.post(`/lessons/${lessonId}/discussions/${threadId}/unpin`);
+};
+
+export const deleteThread = async (lessonId, threadId) => {
+  return apiClient.delete(`/lessons/${lessonId}/discussions/${threadId}`);
+};

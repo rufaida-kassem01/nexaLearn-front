@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import { listThreads } from "../../../services/discussionService";
+import { useAuth } from "../../../context/AuthContext";
+import { useToast } from "../../../hooks/useToast";
+import { listThreads, deleteThread, pinThread, unpinThread } from "../../../services/discussionService";
 import ThreadCard from "./ThreadCard";
 import ThreadDetail from "./ThreadDetail";
 import CreateThreadForm from "./CreateThreadForm";
 
 const ThreadList = ({ lessonId, onClose }) => {
+  const { user } = useAuth();
+  const toast = useToast();
+  const isInstructor = user?.roles?.includes("INSTRUCTOR") ?? false;
+
   const [threads, setThreads] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -43,6 +49,37 @@ const ThreadList = ({ lessonId, onClose }) => {
   const handleCreated = (thread) => {
     setThreads((prev) => [thread, ...prev]);
     setShowCreate(false);
+  };
+
+  const handleDelete = async (thread) => {
+    try {
+      await deleteThread(lessonId, thread.id);
+      setThreads((prev) => prev.filter((t) => t.id !== thread.id));
+      toast.success("Thread deleted.");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message || "Failed to delete thread.");
+    }
+  };
+
+  const handlePinToggle = async (thread) => {
+    try {
+      if (thread.isPinned) {
+        const resp = await unpinThread(lessonId, thread.id);
+        setThreads((prev) =>
+          prev.map((t) => (t.id === thread.id ? { ...t, ...resp.data } : t))
+        );
+        toast.success("Thread unpinned.");
+      } else {
+        const resp = await pinThread(lessonId, thread.id);
+        setThreads((prev) =>
+          prev.map((t) => (t.id === thread.id ? { ...t, ...resp.data } : t))
+        );
+        toast.success("Thread pinned.");
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || err.message || "Failed to update pin.";
+      toast.error(msg);
+    }
   };
 
   if (selectedThread) {
@@ -121,7 +158,14 @@ const ThreadList = ({ lessonId, onClose }) => {
         )}
 
         {threads.map((thread) => (
-          <ThreadCard key={thread.id} thread={thread} onSelect={setSelectedThread} />
+          <ThreadCard
+            key={thread.id}
+            thread={thread}
+            onSelect={setSelectedThread}
+            isInstructor={isInstructor}
+            onPinToggle={handlePinToggle}
+            onDelete={handleDelete}
+          />
         ))}
 
         {nextCursor && (

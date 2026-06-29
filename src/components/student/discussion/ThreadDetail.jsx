@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../hooks/useToast";
-import { getThread, upvoteThread } from "../../../services/discussionService";
+import { getThread, upvoteThread, acceptPost, deleteThread } from "../../../services/discussionService";
 import PostCard from "./PostCard";
 import PostForm from "./PostForm";
 
 const ThreadDetail = ({ lessonId, thread, onBack }) => {
   const { user } = useAuth();
   const toast = useToast();
+  const isInstructor = user?.roles?.includes("INSTRUCTOR") ?? false;
 
   const [threadData, setThreadData] = useState(thread);
   const [posts, setPosts] = useState([]);
@@ -56,6 +57,26 @@ const ThreadDetail = ({ lessonId, thread, onBack }) => {
     setThreadData((prev) => ({ ...prev, postCount: prev.postCount + 1 }));
   };
 
+  const handleAcceptPost = async (postId) => {
+    await acceptPost(lessonId, threadData.id, postId);
+    setThreadData((prev) => ({ ...prev, isResolved: true }));
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, isAccepted: true } : p))
+    );
+    toast.success("Answer accepted!");
+  };
+
+  const handleDeleteThread = async () => {
+    if (!window.confirm("Delete this thread? This cannot be undone.")) return;
+    try {
+      await deleteThread(lessonId, threadData.id);
+      toast.success("Thread deleted.");
+      onBack();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message || "Failed to delete thread.");
+    }
+  };
+
   const dateStr = new Date(threadData.createdAt).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -74,11 +95,27 @@ const ThreadDetail = ({ lessonId, thread, onBack }) => {
         <h3 className="text-sm font-semibold text-gray-800 truncate">
           {threadData.title}
         </h3>
+        {isInstructor && (
+          <button
+            onClick={handleDeleteThread}
+            className="ml-auto text-xs text-gray-400 hover:text-red-600 transition-colors"
+            title="Delete thread"
+          >
+            Delete
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="px-4 py-3 border-b border-gray-100">
-          <p className="text-xs text-gray-500 mb-1">{threadData.authorUsername} &middot; {dateStr}</p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-xs text-gray-500">{threadData.authorUsername} &middot; {dateStr}</p>
+            {threadData.isResolved && (
+              <span className="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">
+                Solved
+              </span>
+            )}
+          </div>
           <p className="text-sm text-gray-800 whitespace-pre-wrap">{threadData.body}</p>
           <button
             onClick={handleUpvoteThread}
@@ -119,6 +156,8 @@ const ThreadDetail = ({ lessonId, thread, onBack }) => {
               post={p}
               lessonId={lessonId}
               threadId={threadData.id}
+              isInstructor={isInstructor}
+              onAccept={handleAcceptPost}
             />
           ))}
 
