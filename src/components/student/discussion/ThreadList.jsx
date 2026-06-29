@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { listThreads } from "../../../services/discussionService";
 import ThreadCard from "./ThreadCard";
+import ThreadDetail from "./ThreadDetail";
 import CreateThreadForm from "./CreateThreadForm";
 
 const ThreadList = ({ lessonId, onClose }) => {
@@ -10,6 +11,7 @@ const ThreadList = ({ lessonId, onClose }) => {
   const [error, setError] = useState("");
   const [unresolvedOnly, setUnresolvedOnly] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [selectedThread, setSelectedThread] = useState(null);
 
   const fetchThreads = useCallback(async (cursor) => {
     setLoading(true);
@@ -42,6 +44,16 @@ const ThreadList = ({ lessonId, onClose }) => {
     setThreads((prev) => [thread, ...prev]);
     setShowCreate(false);
   };
+
+  if (selectedThread) {
+    return (
+      <ThreadDetail
+        lessonId={lessonId}
+        thread={selectedThread}
+        onBack={() => setSelectedThread(null)}
+      />
+    );
+  }
 
   return (
     <div className="w-80 shrink-0 flex flex-col border-l border-gray-200 bg-white">
@@ -109,7 +121,7 @@ const ThreadList = ({ lessonId, onClose }) => {
         )}
 
         {threads.map((thread) => (
-          <ThreadCard key={thread.id} thread={thread} onSelect={() => {}} />
+          <ThreadCard key={thread.id} thread={thread} onSelect={setSelectedThread} />
         ))}
 
         {nextCursor && (

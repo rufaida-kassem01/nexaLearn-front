@@ -15,3 +15,15 @@ export const getThread = async (lessonId, threadId, { cursor, limit } = {}) => {
     params: { cursor, limit },
   });
 };
+
+export const addPost = async (lessonId, threadId, { body }) => {
+  return apiClient.post(`/lessons/${lessonId}/discussions/${threadId}/posts`, { body });
+};
+
+export const upvoteThread = async (lessonId, threadId) => {
+  return apiClient.post(`/lessons/${lessonId}/discussions/${threadId}/upvote`);
+};
+
+export const upvotePost = async (lessonId, threadId, postId) => {
+  return apiClient.post(`/lessons/${lessonId}/discussions/${threadId}/posts/${postId}/upvote`);
+};
