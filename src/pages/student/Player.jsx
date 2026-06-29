@@ -16,6 +16,7 @@ import {
   startAttempt,
   submitAttempt,
 } from "../../services/assessmentService";
+import ThreadList from "../../components/student/discussion/ThreadList";
 
 const SUBMIT_STATE = {
   IDLE: "idle",
@@ -763,6 +764,14 @@ const Player = () => {
         />
       );
     }
+    if (activePanel === "discussion") {
+      return (
+        <ThreadList
+          lessonId={activeLessonId || courseId}
+          onClose={() => setActivePanel(null)}
+        />
+      );
+    }
     return null;
   };
 
@@ -914,6 +923,20 @@ const Player = () => {
                         Quiz
                       </button>
                     )}
+                    <button
+                      onClick={() =>
+                        setActivePanel((prev) =>
+                          prev === "discussion" ? null : "discussion"
+                        )
+                      }
+                      className={`text-sm px-3 py-1 rounded border transition-colors ${
+                        activePanel === "discussion"
+                          ? "border-green-500 bg-green-50 text-green-600"
+                          : "border-gray-300 text-gray-600 hover:border-gray-400"
+                      }`}
+                    >
+                      Discuss
+                    </button>
                     {!isCompleted && (
                       <button
                         onClick={handleManualComplete}
