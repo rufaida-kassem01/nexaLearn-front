@@ -31,6 +31,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CategoryManager from "./pages/admin/CategoryManager";
 import InstructorApplications from "./pages/admin/InstructorApplications";
+import AuditLogs from "./pages/admin/AuditLogs";
 import "quill/dist/quill.snow.css";
 
 const App = () => {
@@ -131,6 +132,7 @@ const App = () => {
             <Route index element={<AdminDashboard />} />
             <Route path="categories" element={<CategoryManager />} />
             <Route path="instructor-applications" element={<InstructorApplications />} />
+            <Route path="audit-logs" element={<AuditLogs />} />
           </Route>
           </Routes>
         </div>
