@@ -27,6 +27,8 @@ import MyEnrollments from "./pages/student/MyEnrollments";
 import Player from "./pages/student/Player";
 import QuizPage from "./pages/student/QuizPage";
 import VerifyCertificate from "./pages/student/VerifyCertificate";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import "quill/dist/quill.snow.css";
 
 const App = () => {
@@ -111,6 +113,20 @@ const App = () => {
             <Route path="course/:courseId/analytics/lessons" element={<LessonAnalytics />} />
             <Route path="course/:courseId/analytics/revenue" element={<RevenueAnalytics />} />
             <Route path="course/:courseId/analytics/quiz-stats" element={<QuizAnalytics />} />
+          </Route>
+
+          {/* Admin */}
+          <Route
+            path="/admin"
+            element={
+              <ErrorBoundary>
+                <ProtectedRoute requiredRole="ADMIN">
+                  <AdminLayout />
+                </ProtectedRoute>
+              </ErrorBoundary>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
           </Route>
           </Routes>
         </div>
