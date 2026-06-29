@@ -2,25 +2,30 @@ import { Line } from "rc-progress";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getMyEnrollments } from "../../services/enrollmentService";
+import { getMyEnrollments, requestRefund } from "../../services/enrollmentService";
 import { getCourse } from "../../services/courseService";
 import {
   getCourseCertificate,
   downloadCertificate,
 } from "../../services/certificateService";
 import { normalizeCourseDetail } from "../../utils/normalize";
+import { useToast } from "../../hooks/useToast";
 import Footer from "../../components/student/Footer";
+import RefundModal from "../../components/student/RefundModal";
 import Skeleton from "../../components/Skeleton";
 
 const MyEnrollments = () => {
   const { user, accessToken } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [courses, setCourses] = useState([]);
   const [enrollmentByCourseId, setEnrollmentByCourseId] = useState({});
   const [certByCourseId, setCertByCourseId] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [downloading, setDownloading] = useState(null);
+  const [refundCourseId, setRefundCourseId] = useState(null);
+  const [refundLoading, setRefundLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user) {
@@ -77,6 +82,24 @@ const MyEnrollments = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleRefund = async (reason) => {
+    if (!refundCourseId) return;
+    setRefundLoading(true);
+    try {
+      await requestRefund(refundCourseId);
+      setEnrollmentByCourseId((prev) => ({
+        ...prev,
+        [refundCourseId]: { ...prev[refundCourseId], status: "REFUNDED" },
+      }));
+      setRefundCourseId(null);
+      toast.success("Refund requested. Your enrollment will be updated shortly.");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err.message || "Refund request failed.");
+    } finally {
+      setRefundLoading(false);
+    }
+  };
 
   const handleDownload = async (courseId) => {
     const cert = certByCourseId[courseId];
@@ -191,7 +214,7 @@ const MyEnrollments = () => {
                         ? `${Math.round(percent)}% (${Math.round((percent / 100) * lessonCount)}/${lessonCount})`
                         : `${Math.round(percent)}%`}
                     </td>
-                    <td className="px-4 py-3 max-sm:text-right">
+                    <td className="px-4 py-3 max-sm:text-right space-y-1">
                       {hasCert ? (
                         <button
                           onClick={() => handleDownload(course._id)}
@@ -213,6 +236,14 @@ const MyEnrollments = () => {
                           {isCompleted ? "Review" : "Continue"}
                         </button>
                       )}
+                      {enrollment?.status === "ACTIVE" && !course.isFree && Number(course.coursePrice) > 0 && (
+                        <button
+                          onClick={() => setRefundCourseId(course._id)}
+                          className="block text-xs text-red-500 hover:text-red-700 hover:underline"
+                        >
+                          Request Refund
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -221,6 +252,14 @@ const MyEnrollments = () => {
           </table>
         )}
       </div>
+
+      <RefundModal
+        courseTitle={courses.find((c) => c._id === refundCourseId)?.courseTitle || ""}
+        onConfirm={handleRefund}
+        onCancel={() => setRefundCourseId(null)}
+        isLoading={refundLoading}
+      />
+
       <Footer />
     </>
   );

@@ -19,3 +19,7 @@ export const getMyEnrollments = async () => {
 export const cancelEnrollment = async (courseId) => {
   return apiClient.post(`/courses/${courseId}/enroll/cancel`);
 };
+
+export const requestRefund = async (courseId) => {
+  return apiClient.post(`/courses/${courseId}/enroll/refund`);
+};
