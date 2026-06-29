@@ -2,6 +2,8 @@
 
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Font Sizes: --text-{name}: {size}; */
   --text-course-deatails-heading-small: 26px;
@@ -38,9 +40,32 @@
   font-family: Outfit;
 }
 
+html {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+body {
+  background-color: var(--color-page-bg);
+  color: var(--color-body);
+}
+
+:root {
+  --color-page-bg: #ffffff;
+  --color-body: #1f2937;
+}
+
+.dark {
+  --color-page-bg: #0f172a;
+  --color-body: #e2e8f0;
+}
+
 .rich-text {
   font-size: 15px;
   color: #7a7b7d;
+}
+
+.dark .rich-text {
+  color: #94a3b8;
 }
 
 .rich-text p {
@@ -54,11 +79,19 @@
   margin: 32px 0;
 }
 
+.dark .rich-text h1 {
+  color: #f1f5f9;
+}
+
 .rich-text h2 {
   font-size: 22px;
   font-weight: 700;
   color: #252525;
   margin: 24px 0;
+}
+
+.dark .rich-text h2 {
+  color: #f1f5f9;
 }
 
 .rich-text h3 {
@@ -68,11 +101,19 @@
   margin: 20px 0;
 }
 
+.dark .rich-text h3 {
+  color: #e2e8f0;
+}
+
 .rich-text h4 {
   font-size: 16px;
   font-weight: 500;
   color: #444444;
   margin: 16px 0;
+}
+
+.dark .rich-text h4 {
+  color: #cbd5e1;
 }
 
 .rich-text h5 {
@@ -82,11 +123,19 @@
   margin: 12px 0;
 }
 
+.dark .rich-text h5 {
+  color: #94a3b8;
+}
+
 .rich-text h6 {
   font-size: 12px;
   font-weight: 400;
   color: #666666;
   margin: 8px 0;
+}
+
+.dark .rich-text h6 {
+  color: #64748b;
 }
 
 .rich-text strong {
