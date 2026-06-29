@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { assets } from "../../assets/assets";
 import { useAuth } from "../../context/AuthContext";
+import NotificationBell from "../NotificationBell";
 
 const UserMenu = ({ user, onSignOut }) => {
   const [open, setOpen] = useState(false);
@@ -58,7 +59,10 @@ const Navbar = () => {
           Hi! {user?.email ?? "Educator"}
         </p>
         {user ? (
-          <UserMenu user={user} onSignOut={handleSignOut} />
+          <>
+            <NotificationBell />
+            <UserMenu user={user} onSignOut={handleSignOut} />
+          </>
         ) : (
           <img className="max-w-8" src={assets.profile_img} alt="" />
         )}
