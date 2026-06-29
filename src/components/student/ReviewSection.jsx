@@ -1,16 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { assets } from "../../assets/assets";
 import Rating from "./Rating";
+import { useToast } from "../../hooks/useToast";
 import {
   getCourseReviews,
   createReview,
   updateReview,
   deleteReview,
+  flagReview,
 } from "../../services/reviewService";
 
 const REVIEWS_PER_PAGE = 10;
 
+const FLAG_REASONS = [
+  { label: "Spam or misleading", value: "USER_REPORTED" },
+  { label: "Inappropriate content", value: "USER_REPORTED" },
+  { label: "Harassment", value: "USER_REPORTED" },
+];
+
 const ReviewSection = ({ courseId, user, enrolled }) => {
+  const toast = useToast();
   const [reviews, setReviews] = useState([]);
   const [reviewsPage, setReviewsPage] = useState(1);
   const [reviewsTotal, setReviewsTotal] = useState(0);
@@ -31,6 +40,11 @@ const ReviewSection = ({ courseId, user, enrolled }) => {
 
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
+  const [flaggedReviewIds, setFlaggedReviewIds] = useState(new Set());
+  const [activeFlagReviewId, setActiveFlagReviewId] = useState(null);
+  const [flagReason, setFlagReason] = useState(FLAG_REASONS[0].label);
+  const [flagSubmitting, setFlagSubmitting] = useState(false);
 
   const myReview = Array.isArray(reviews)
     ? reviews.find((r) => r.user?.id === user?.id)
@@ -364,6 +378,59 @@ const ReviewSection = ({ courseId, user, enrolled }) => {
                   {reviewCommentText(review)}
                 </p>
               )}
+
+              <div className="mt-2">
+                {flaggedReviewIds.has(review.id) ? (
+                  <span className="text-xs text-gray-400 italic">Reported</span>
+                ) : activeFlagReviewId === review.id ? (
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={flagReason}
+                      onChange={(e) => setFlagReason(e.target.value)}
+                      className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    >
+                      {FLAG_REASONS.map((r) => (
+                        <option key={r.label} value={r.label}>{r.label}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={async () => {
+                        setFlagSubmitting(true);
+                        try {
+                          await flagReview(review.id, { reason: "USER_REPORTED" });
+                          setFlaggedReviewIds((prev) => new Set(prev).add(review.id));
+                          setActiveFlagReviewId(null);
+                          toast.success("Review reported.");
+                        } catch (err) {
+                          toast.error(err?.response?.data?.message || err.message || "Failed to report.");
+                        } finally {
+                          setFlagSubmitting(false);
+                        }
+                      }}
+                      disabled={flagSubmitting}
+                      className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+                    >
+                      {flagSubmitting ? "…" : "Submit"}
+                    </button>
+                    <button
+                      onClick={() => setActiveFlagReviewId(null)}
+                      className="text-xs text-gray-500 hover:underline"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setActiveFlagReviewId(review.id);
+                      setFlagReason(FLAG_REASONS[0].label);
+                    }}
+                    className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    Report
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}

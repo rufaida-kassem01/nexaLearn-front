@@ -19,3 +19,7 @@ export const updateReview = async (reviewId, data) => {
 export const deleteReview = async (reviewId) => {
   return apiClient.delete(`/reviews/${reviewId}`);
 };
+
+export const flagReview = async (reviewId, { reason }) => {
+  return apiClient.post(`/reviews/${reviewId}/flags`, { reason });
+};
