@@ -29,6 +29,7 @@ import QuizPage from "./pages/student/QuizPage";
 import VerifyCertificate from "./pages/student/VerifyCertificate";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import CategoryManager from "./pages/admin/CategoryManager";
 import "quill/dist/quill.snow.css";
 
 const App = () => {
@@ -127,6 +128,7 @@ const App = () => {
             }
           >
             <Route index element={<AdminDashboard />} />
+            <Route path="categories" element={<CategoryManager />} />
           </Route>
           </Routes>
         </div>
