@@ -5,7 +5,6 @@ import { loadStripe } from "@stripe/stripe-js";
 import { assets } from "../../assets/assets";
 import { getCourse } from "../../services/courseService";
 import { createPaymentIntent, getPaymentStatus } from "../../services/paymentService";
-import { normalizeCourseDetail } from "../../utils/normalize";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -90,7 +89,7 @@ const CheckoutForm = ({ course, clientSecret, paymentIntentId }) => {
         disabled={!stripe || processing}
         className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-lg transition text-sm"
       >
-        {status === "paying" ? "Processing…" : status === "polling" ? "Confirming…" : `Pay ${course.coursePrice.toFixed(2)}`}
+        {status === "paying" ? "Processing…" : status === "polling" ? "Confirming…" : `Pay ${course.basePrice.toFixed(2)}`}
       </button>
     </form>
   );
@@ -114,8 +113,7 @@ const CheckoutPage = () => {
       setError("");
       try {
         const data = await getCourse(courseId);
-        const normalized = normalizeCourseDetail(data);
-        setCourse(normalized);
+        setCourse(data);
 
         const intent = await createPaymentIntent(courseId);
         setClientSecret(intent.clientSecret);
@@ -166,12 +164,12 @@ const CheckoutPage = () => {
         </div>
 
         <h1 className="text-2xl font-bold text-gray-800 mb-1">Complete your purchase</h1>
-        <p className="text-sm text-gray-500 mb-7">{course.courseTitle}</p>
+        <p className="text-sm text-gray-500 mb-7">{course.title}</p>
 
         <div className="flex items-center justify-between py-4 border-y border-gray-200 mb-6">
           <span className="text-gray-700 font-medium">Total</span>
           <span className="text-2xl font-bold text-gray-900">
-            ${Number(course.coursePrice).toFixed(2)}
+            ${Number(course.basePrice).toFixed(2)}
           </span>
         </div>
 

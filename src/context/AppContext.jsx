@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { dummyCourses } from "../assets/assets";
 import * as courseService from "../services/courseService";
 import * as enrollmentService from "../services/enrollmentService";
-import { normalizeCourse } from "../utils/normalize";
 import { useAuth } from "./AuthContext";
 
 export const createSafeAppContext = () => ({
@@ -59,20 +58,18 @@ export const AppContextProvider = (props) => {
         return;
       }
 
-      setAllCourses(published.map((course) => normalizeCourse(course)));
+      setAllCourses(published);
     } catch (err) {
       console.error("Failed to fetch courses:", err.message);
       setAllCourses(dummyCourses);
     }
   };
 
-  // ── Fetch a single course by ID and normalize it ──────────────────────────
+  // ── Fetch a single course by ID ───────────────────────────────────────────
   // Used as a fallback for enrolled courses that aren't in the public
   // published list (e.g. the course was unpublished after enrollment).
-  // GET /courses/:id already returns modules[].lessons[] nested.
-  const fetchAndNormalizeCourse = async (courseId) => {
-    const course = await courseService.getCourse(courseId);
-    return normalizeCourse(course);
+  const fetchCourseById = async (courseId) => {
+    return courseService.getCourse(courseId);
   };
 
   // ── Fetch the current user's enrolled courses ─────────────────────────────
@@ -98,7 +95,7 @@ export const AppContextProvider = (props) => {
       }
 
       // Split into found (in catalog) and missing (need individual fetch)
-      const catalogById = new Map(allCourses.map((c) => [String(c._id), c]));
+      const catalogById = new Map(allCourses.map((c) => [String(c.id), c]));
       const found = [];
       const missingIds = [];
 
@@ -112,7 +109,7 @@ export const AppContextProvider = (props) => {
 
       // Fetch missing courses individually (best-effort — skip any that 404)
       const fetched = await Promise.allSettled(
-        missingIds.map((id) => fetchAndNormalizeCourse(id)),
+        missingIds.map((id) => fetchCourseById(id)),
       );
       const recovered = fetched
         .filter((r) => r.status === "fulfilled")
@@ -144,7 +141,7 @@ export const AppContextProvider = (props) => {
     if (!accessToken) {
       throw new Error("Please log in to enroll in this course.");
     }
-    await enrollmentService.enrollFree(course._id);
+    await enrollmentService.enrollFree(course.id);
     await fetchUserEnrolledCourses();
   };
 
@@ -160,35 +157,28 @@ export const AppContextProvider = (props) => {
 
   const calculateRating = (course) => course?.ratingAvg ?? 0;
 
-  const calculateChapterTime = (chapter) => {
-    if (!Array.isArray(chapter?.chapterContent)) return "0 minutes";
-    const totalMinutes = chapter.chapterContent.reduce(
-      (sum, lecture) => sum + (lecture.lectureDuration ?? 0),
+  const calculateChapterTime = (module) => {
+    if (!Array.isArray(module?.lessons)) return "0 minutes";
+    const totalSeconds = module.lessons.reduce(
+      (sum, lesson) => sum + (lesson.durationSecs ?? 0),
       0,
     );
-    return humanizeDuration(totalMinutes * 60 * 1000, { units: ["h", "m"] });
+    return humanizeDuration(totalSeconds * 1000, { units: ["h", "m"] });
   };
 
   const calculateCourseDuration = (course) => {
-    if (!Array.isArray(course?.courseContent)) return "0 minutes";
-    const totalMinutes = course.courseContent.reduce((sum, chapter) => {
-      if (!Array.isArray(chapter.chapterContent)) return sum;
-      return (
-        sum +
-        chapter.chapterContent.reduce(
-          (s, lecture) => s + (lecture.lectureDuration ?? 0),
-          0,
-        )
-      );
+    if (!Array.isArray(course?.modules)) return "0 minutes";
+    const totalSeconds = course.modules.reduce((sum, mod) => {
+      if (!Array.isArray(mod.lessons)) return sum;
+      return sum + mod.lessons.reduce((s, lesson) => s + (lesson.durationSecs ?? 0), 0);
     }, 0);
-    return humanizeDuration(totalMinutes * 60 * 1000, { units: ["h", "m"] });
+    return humanizeDuration(totalSeconds * 1000, { units: ["h", "m"] });
   };
 
   const calculateNoOfLectures = (course) => {
-    if (!Array.isArray(course?.courseContent)) return 0;
-    return course.courseContent.reduce(
-      (sum, chapter) =>
-        sum + (Array.isArray(chapter.chapterContent) ? chapter.chapterContent.length : 0),
+    if (!Array.isArray(course?.modules)) return 0;
+    return course.modules.reduce(
+      (sum, mod) => sum + (Array.isArray(mod.lessons) ? mod.lessons.length : 0),
       0,
     );
   };

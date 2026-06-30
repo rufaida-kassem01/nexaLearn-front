@@ -7,7 +7,6 @@ import SearchBar from "../../components/student/SearchBar";
 import Skeleton from "../../components/Skeleton";
 import { getCategoryCourses } from "../../services/courseService";
 import { getCategories } from "../../services/categoryService";
-import { normalizeSearchCourse } from "../../utils/normalize";
 
 const PAGE_LIMIT = 12;
 
@@ -78,8 +77,7 @@ const CategoryCourses = () => {
           : Array.isArray(data)
             ? data
             : [];
-      const normalized = list.map((c) => normalizeSearchCourse(c)).filter(Boolean);
-      setCourses(normalized);
+      setCourses(list.filter(Boolean));
       setTotal(data.total ?? list.length);
     } catch (err) {
       setError("Failed to load courses. Please try again.");
@@ -225,7 +223,7 @@ const CategoryCourses = () => {
           <>
             <div className="grid grid-cols-auto my-8 gap-6 px-2 md:p-0">
               {courses.map((course) => (
-                <CourseCard key={course._id} course={course} />
+                <CourseCard key={course.courseId ?? course.id} course={course} />
               ))}
             </div>
 

@@ -4,7 +4,6 @@ import CourseCard from "./CourseCard";
 import Loading from "./Loading";
 import { getCourses } from "../../services/courseService";
 import { getCategories } from "../../services/categoryService";
-import { normalizeCourse } from "../../utils/normalize";
 
 const flattenCategories = (categories) => {
   const result = [];
@@ -32,7 +31,7 @@ const CoursesSection = () => {
           : Array.isArray(coursesData)
             ? coursesData
             : [];
-        setCourses(list.map((c) => normalizeCourse(c)).filter(Boolean));
+        setCourses(list.filter(Boolean));
         setCategories(flattenCategories(categoriesData ?? []));
       })
       .catch((e) => {
@@ -73,7 +72,7 @@ const CoursesSection = () => {
       ) : (
         <div className="grid grid-cols-auto gap-6 py-8">
           {courses.slice(0, 4).map((course) => (
-            <CourseCard key={course._id} course={course} />
+            <CourseCard key={course.id ?? course.courseId} course={course} />
           ))}
         </div>
       )}

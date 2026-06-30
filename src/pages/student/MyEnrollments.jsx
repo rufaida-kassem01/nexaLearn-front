@@ -8,7 +8,6 @@ import {
   getCourseCertificate,
   downloadCertificate,
 } from "../../services/certificateService";
-import { normalizeCourseDetail } from "../../utils/normalize";
 import { useToast } from "../../hooks/useToast";
 import Footer from "../../components/student/Footer";
 import RefundModal from "../../components/student/RefundModal";
@@ -58,8 +57,7 @@ const MyEnrollments = () => {
       );
       const resolved = courseResults
         .filter((r) => r.status === "fulfilled")
-        .map((r) => r.value)
-        .map(normalizeCourseDetail);
+        .map((r) => r.value);
 
       setCourses(resolved);
 
@@ -150,18 +148,18 @@ const MyEnrollments = () => {
   }
 
   const calculateCourseDuration = (course) => {
-    if (!Array.isArray(course?.courseContent)) return "0 minutes";
-    const totalMinutes = course.courseContent.reduce((sum, chapter) => {
-      if (!Array.isArray(chapter.chapterContent)) return sum;
-      return sum + chapter.chapterContent.reduce((s, l) => s + (l.lectureDuration || 0), 0);
+    if (!Array.isArray(course?.modules)) return "0 minutes";
+    const totalSeconds = course.modules.reduce((sum, mod) => {
+      if (!Array.isArray(mod.lessons)) return sum;
+      return sum + mod.lessons.reduce((s, l) => s + (l.durationSecs || 0), 0);
     }, 0);
-    return `${totalMinutes} min`;
+    return `${Math.round(totalSeconds / 60)} min`;
   };
 
   const calculateNoOfLectures = (course) => {
-    if (!Array.isArray(course?.courseContent)) return 0;
-    return course.courseContent.reduce(
-      (sum, ch) => sum + (Array.isArray(ch.chapterContent) ? ch.chapterContent.length : 0),
+    if (!Array.isArray(course?.modules)) return 0;
+    return course.modules.reduce(
+      (sum, mod) => sum + (Array.isArray(mod.lessons) ? mod.lessons.length : 0),
       0,
     );
   };
@@ -185,22 +183,22 @@ const MyEnrollments = () => {
             </thead>
             <tbody className="text-gray-700">
               {courses.map((course) => {
-                const enrollment = enrollmentByCourseId[course._id];
+                const enrollment = enrollmentByCourseId[course.id];
                 const percent = enrollment?.progressPercent ?? 0;
                 const isCompleted = percent >= 100;
-                const hasCert = certByCourseId[course._id];
+                const hasCert = certByCourseId[course.id];
                 const lessonCount = calculateNoOfLectures(course);
 
                 return (
-                  <tr key={course._id} className="border-b border-gray-500/20">
+                  <tr key={course.id} className="border-b border-gray-500/20">
                     <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3">
                       <img
-                        src={course.courseThumbnail}
+                        src={course.thumbnailUrl}
                         alt=""
                         className="w-14 sm:w-24 md:w-28"
                       />
                       <div className="flex-1">
-                        <p className="mb-1 max-sm:text-sm">{course.courseTitle}</p>
+                        <p className="mb-1 max-sm:text-sm">{course.title}</p>
                         <Line
                           strokeWidth={2}
                           percent={percent}
@@ -219,30 +217,30 @@ const MyEnrollments = () => {
                     <td className="px-4 py-3 max-sm:text-right space-y-1">
                       {hasCert ? (
                         <button
-                          onClick={() => handleDownload(course._id)}
-                          disabled={downloading === course._id}
+                          onClick={() => handleDownload(course.id)}
+                          disabled={downloading === course.id}
                           className="px-3 sm:px-5 py-1.5 sm:py-2 bg-green-600 max-sm:text-xs text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {downloading === course._id ? "Downloading…" : "Download Certificate"}
+                          {downloading === course.id ? "Downloading…" : "Download Certificate"}
                         </button>
                       ) : (
                         <button
                           className="px-3 sm:px-5 py-1.5 sm:py-2 bg-blue-600 max-sm:text-xs text-white rounded"
                           onClick={() => {
                             const path = enrollment?.lastAccessedLessonId
-                              ? `/player/${course._id}/${enrollment.lastAccessedLessonId}`
-                              : `/player/${course._id}`;
+                              ? `/player/${course.id}/${enrollment.lastAccessedLessonId}`
+                              : `/player/${course.id}`;
                             navigate(path);
                           }}
                         >
                           {isCompleted ? "Review" : "Continue"}
                         </button>
                       )}
-                      {enrollment?.status === "ACTIVE" && !course.isFree && Number(course.coursePrice) > 0 && (
+                      {enrollment?.status === "ACTIVE" && !course.isFree && Number(course.basePrice) > 0 && (
                         <button
                           onClick={() => {
-                            setRefundCourseId(course._id);
-                            setRefundCourseTitle(course.courseTitle);
+                            setRefundCourseId(course.id);
+                            setRefundCourseTitle(course.title);
                           }}
                           className="block text-xs text-red-500 hover:text-red-700 hover:underline"
                         >

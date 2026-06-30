@@ -40,6 +40,7 @@ const EditCourse = () => {
   const [fetchError, setFetchError] = useState("");
   const [showVideoLibrary, setShowVideoLibrary] = useState(false);
   const [quizBuilderLessonId, setQuizBuilderLessonId] = useState(null);
+  const [showQuizBuilder, setShowQuizBuilder] = useState(false);
 
   const [lectureDetails, setLectureDetails] = useState({
     lectureTitle: "",

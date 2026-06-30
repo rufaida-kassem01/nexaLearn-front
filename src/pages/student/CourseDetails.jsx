@@ -9,7 +9,6 @@ import ReviewSection from "../../components/student/ReviewSection";
 import Skeleton from "../../components/Skeleton";
 import { getCourse } from "../../services/courseService";
 import { checkEnrollment, enrollFree, startCheckout } from "../../services/enrollmentService";
-import { normalizeCourseDetail } from "../../utils/normalize";
 
 const CourseDetails = () => {
   const { id } = useParams();
@@ -40,7 +39,7 @@ const CourseDetails = () => {
     setError("");
     try {
       const data = await getCourse(id);
-      setCourseData(normalizeCourseDetail(data));
+      setCourseData(data);
     } catch {
       setError("Failed to load course details.");
     } finally {
@@ -104,10 +103,7 @@ const CourseDetails = () => {
     }
   };
 
-  const instructorName =
-    courseData?.instructorName ||
-    (courseData?.modules?.[0]?.lessons?.[0]?.instructor?.name) ||
-    "NexaLearn";
+  const instructorName = "NexaLearn";
 
   if (loading) {
     return (
@@ -159,12 +155,12 @@ const CourseDetails = () => {
 
         <div className="max-w-xl z-10 text-gray-500">
           <h1 className="md:text-course-deatails-heading-large text-course-deatails-heading-small font-semibold text-gray-800">
-            {courseData.courseTitle}
+            {courseData.title}
           </h1>
           <p
             className="pt-4 md:text-base text-sm"
             dangerouslySetInnerHTML={{
-              __html: courseData.courseDescription?.slice(0, 200),
+              __html: courseData.description?.slice(0, 200),
             }}
           />
 
@@ -183,10 +179,6 @@ const CourseDetails = () => {
                 />
               ))}
             </div>
-            <p className="text-gray-600">
-              {courseData.courseRatings.length}
-              {courseData.courseRatings.length !== 1 ? " Ratings" : " Rating"}
-            </p>
             <p>
               {courseData.totalEnrollments}{" "}
               {courseData.totalEnrollments !== 1 ? "students" : "student"}
@@ -200,7 +192,7 @@ const CourseDetails = () => {
           <div className="pt-8 text-gray-800">
             <h2 className="text-xl font-semibold">Course Structure</h2>
             <div className="pt-5">
-              {courseData.courseContent.map((chapter, index) => (
+              {courseData.modules.map((mod, index) => (
                 <div
                   key={index}
                   className="border border-gray-300 bg-white mb-2 rounded"
@@ -218,13 +210,13 @@ const CourseDetails = () => {
                         alt="arrow icon"
                       />
                       <p className="font-medium md:text-base text-sm">
-                        {chapter.chapterTitle}
+                        {mod.title}
                       </p>
                     </div>
                     <p className="text-sm md:text-default">
-                      {chapter.chapterContent.length} lecture
-                      {chapter.chapterContent.length !== 1 ? "s" : ""} -{" "}
-                      {calculateChapterTime(chapter)}
+                      {mod.lessons.length} lecture
+                      {mod.lessons.length !== 1 ? "s" : ""} -{" "}
+                      {calculateChapterTime(mod)}
                     </p>
                   </div>
                   <div
@@ -233,7 +225,7 @@ const CourseDetails = () => {
                     }`}
                   >
                     <ul className="list-disc md:pl-10 pl-4 pr-4 py-2 text-gray-600 border-t border-gray-300">
-                      {chapter.chapterContent.map((lecture, i) => (
+                      {mod.lessons.map((lesson, i) => (
                         <li key={i} className="flex items-start gap-2 py-1">
                           <img
                             src={assets.play_icon}
@@ -241,13 +233,13 @@ const CourseDetails = () => {
                             className="w-4 h-4 mt-1"
                           />
                           <div className="flex items-center justify-between w-full text-gray-800 text-xs md:text-default">
-                            <p>{lecture.lectureTitle}</p>
+                            <p>{lesson.title}</p>
                             <div className="flex gap-2">
-                              {lecture.isPreviewFree && (
+                              {lesson.isPreview && (
                                 <p
                                   onClick={() =>
                                     setPlayerData({
-                                      videoId: lecture.lectureUrl
+                                      videoId: lesson.contentUrl
                                         ?.split("/")
                                         .pop(),
                                     })
@@ -259,7 +251,7 @@ const CourseDetails = () => {
                               )}
                               <p>
                                 {humanizeDuration(
-                                  lecture.lectureDuration * 60 * 1000,
+                                  lesson.durationSecs * 1000,
                                   { units: ["h", "m"] },
                                 )}
                               </p>
@@ -281,7 +273,7 @@ const CourseDetails = () => {
             <p
               className="pt-3 rich-text"
               dangerouslySetInnerHTML={{
-                __html: courseData.courseDescription,
+                __html: courseData.description,
               }}
             />
           </div>
@@ -305,8 +297,8 @@ const CourseDetails = () => {
             />
           ) : (
             <img
-              src={courseData.courseThumbnail}
-              alt={courseData.courseTitle}
+              src={courseData.thumbnailUrl}
+              alt={courseData.title}
               className="w-full"
             />
           )}
@@ -320,7 +312,7 @@ const CourseDetails = () => {
               ) : (
                 <p className="text-gray-800 md:text-4xl text-2xl font-semibold">
                   {currency}
-                  {Number(courseData.coursePrice).toFixed(2)}
+                  {Number(courseData.basePrice).toFixed(2)}
                 </p>
               )}
             </div>
@@ -344,7 +336,7 @@ const CourseDetails = () => {
 
             {enrolled === true ? (
               <button
-                onClick={() => navigate(`/player/${courseData._id}`)}
+                onClick={() => navigate(`/player/${courseData.id}`)}
                 className="md:mt-6 mt-4 w-full py-3 rounded bg-green-600 hover:bg-green-700 text-white font-medium transition"
               >
                 Go to course
