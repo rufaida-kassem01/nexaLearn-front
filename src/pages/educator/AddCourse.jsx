@@ -34,7 +34,7 @@ const AddCourse = () => {
   const [submitError, setSubmitError] = useState("");
   const [showVideoLibrary, setShowVideoLibrary] = useState(false);
   const [createdCourseId, setCreatedCourseId] = useState(null);
-  const [showQuizBuilder, setShowQuizBuilder] = useState(false);
+  const [quizBuilderLessonId, setQuizBuilderLessonId] = useState(null);
 
   const [lectureDetails, setLectureDetails] = useState({
     lectureTitle: "",
@@ -205,32 +205,45 @@ const AddCourse = () => {
       });
 
       // 2. Create modules (chapters) sequentially to preserve order
+      const updatedChapters = [];
       for (const chapter of chapters) {
         const mod = await courseService.addModule(course.id, {
           title: chapter.chapterTitle,
         });
 
         // 3. Create lessons for this module sequentially
+        const updatedContent = [];
         for (const lecture of chapter.chapterContent) {
           const durationSeconds =
             Math.round(parseFloat(lecture.lectureDuration) * 60) || 0;
 
-          await courseService.addLesson(course.id, mod.id, {
+          const createdLesson = await courseService.addLesson(course.id, mod.id, {
             title: lecture.lectureTitle,
             contentType: (lecture.lectureContentType || "VIDEO").toUpperCase(),
             contentUrl: lecture.lectureUrl,
             durationSeconds,
           });
+          updatedContent.push({
+            ...lecture,
+            lectureId: createdLesson.id || lecture.lectureId,
+          });
         }
+        updatedChapters.push({
+          ...chapter,
+          chapterContent: updatedContent,
+        });
       }
 
-      // 4. Refresh the global course list so the educator sees the new course
+      // 4. Update local chapters with real DB IDs so QuizBuilder can use them
+      setChapters(updatedChapters);
+
+      // 5. Refresh the global course list so the educator sees the new course
       await fetchAllCourses();
 
-      // 5. Store course ID for video management
+      // 6. Store course ID for video management and quiz creation
       setCreatedCourseId(course.id);
 
-      // 6. Reset form
+      // 7. Reset form (keep chapters so Quiz buttons remain accessible)
       setCourseTitle("");
       setCourseSubtitle("");
       setCoursePrice(0);
@@ -238,7 +251,6 @@ const AddCourse = () => {
       setLanguage("en");
       setIsFree(false);
       setImage(null);
-      setChapters([]);
       if (quillRef.current) quillRef.current.root.innerHTML = "";
       if (categories.length > 0) setCategoryId(categories[0].id);
 
@@ -451,6 +463,15 @@ const AddCourse = () => {
                         — {lecture.isPreviewFree ? "Free Preview" : "Paid"}
                       </span>
                       <div className="flex items-center gap-2">
+                        {createdCourseId && (
+                          <button
+                            type="button"
+                            onClick={() => setQuizBuilderLessonId(lecture.lectureId)}
+                            className="text-[10px] text-purple-600 hover:text-purple-800 px-1.5 py-0.5 border border-purple-200 rounded"
+                          >
+                            Quiz
+                          </button>
+                        )}
                         <DragHandle
                           canMoveUp={lectureIndex > 0}
                           canMoveDown={
@@ -579,19 +600,6 @@ const AddCourse = () => {
                     Upload Video
                   </button>
                 </div>
-                <div className="mb-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPopup(false);
-                      setShowQuizBuilder(true);
-                    }}
-                    className="text-xs text-purple-600 hover:text-purple-800 mt-1"
-                  >
-                    Add Quiz
-                  </button>
-                </div>
-
                 <div className="flex gap-2 my-4">
                   <p>Is Preview Free?</p>
                   <input
@@ -670,12 +678,16 @@ const AddCourse = () => {
         </button>
       </form>
 
-      {showQuizBuilder && (
+      {quizBuilderLessonId && (
         <QuizBuilder
-          courseId=""
-          lessonId=""
-          lessonTitle=""
-          onClose={() => setShowQuizBuilder(false)}
+          courseId={createdCourseId}
+          lessonId={quizBuilderLessonId}
+          lessonTitle={
+            chapters
+              .flatMap((c) => c.chapterContent)
+              .find((l) => l.lectureId === quizBuilderLessonId)?.lectureTitle || ""
+          }
+          onClose={() => setQuizBuilderLessonId(null)}
         />
       )}
     </div>
