@@ -1,0 +1,145 @@
+===============================================================================
+FIGURE 1: System Architecture (fig-architecture.png)
+===============================================================================
+
+TITLE: NexaLearn Overall System Architecture
+
+THREE-TIER LAYOUT (top to bottom):
+
+TIER 1 — PRESENTATION LAYER: Frontend (React SPA)
+  Contains 4 components grouped in a blue box:
+  - Public Pages          (e.g., Home, Login, Signup, Course listings)
+  - Student Interface     (e.g., Player, Quiz, Enrollments, Discussion)
+  - Educator Dashboard    (e.g., Course management, Quiz builder, Analytics)
+  - Admin Panel           (e.g., Category manager, Instructor apps, Audit logs)
+  Arrow labeled "HTTPS / REST" points downward to Tier 2.
+
+TIER 2 — APPLICATION LAYER: Backend (NestJS)
+  Contains 6 modules grouped in a green box:
+  - Auth Module           (JWT, Passport, Redis sessions, Argon2 hashing)
+  - Courses               (CRUD, modules, lessons, publish workflow)
+  - Payments              (Stripe integration, PaymentIntents, webhooks)
+  - Media                 (Mux video upload, transcoding, playback)
+  - Assessment            (Quiz builder, grading, AI pipeline)
+  - Analytics             (Lesson views, revenue, quiz stats, enrollments)
+  Four arrows point downward to Tier 3 infrastructure services.
+
+TIER 3 — INFRASTRUCTURE LAYER
+  Contains 4 services in an orange box:
+  - PostgreSQL            (Primary database — Prisma ORM, 17 migrations)
+  - Redis                 (Session store, rate-limit backing)
+  - Mux Video             (Video transcoding, streaming via Mux Player)
+  - Stripe                (Payment processing, PCI-compliant)
+
+===============================================================================
+FIGURE 2: Frontend Route Hierarchy (fig-routes.png)
+===============================================================================
+
+TITLE: Frontend Route Hierarchy
+
+STRUCTURE: Tree diagram with App (Root) at top, Routes (React Router DOM)
+below it, with 4 branches fanning out left and right:
+
+BRANCH 1 — PUBLIC (left side, marked green)
+  No authentication required:
+  - /                     Home page (hero, courses, testimonials)
+  - /login                Login form
+  - /signup               Registration form
+  - /course-list          Course catalog with search and filters
+  - /course/:id           Course details with syllabus, reviews
+  - /verify/:code         Certificate verification
+
+BRANCH 2 — STUDENT (Protected, marked blue)
+  Requires authentication (any role):
+  - /checkout/:courseId   Stripe payment checkout page
+  - /my-enrollments       Enrolled courses list
+  - /player/:courseId     Video player with lesson navigation
+  - /quiz/:lessonId       Quiz taking interface
+
+BRANCH 3 — EDUCATOR (Instructor role, marked purple)
+  Requires INSTRUCTOR or ADMIN role:
+  - /educator             Dashboard with course overview
+  - /educator/add-course  Create new course
+  - /educator/edit-course/:id  Edit existing course
+  - /educator/my-courses  List of owned courses
+  - /educator/...         Analytics: lessons, revenue, quiz stats
+
+BRANCH 4 — ADMIN (Admin role, marked red)
+  Requires ADMIN role:
+  - /admin                Admin dashboard
+  - /admin/categories     Category CRUD
+  - /admin/instructor-applications     Review instructor applications
+  - /admin/audit-logs     Searchable action log
+
+===============================================================================
+FIGURE 3: Authentication Flow (fig-auth-flow.png)
+===============================================================================
+
+TITLE: Authentication and Token Refresh Flow
+
+LAYOUT: Four horizontal rows showing two interleaved sequences.
+
+ROW 1 — LOGIN FLOW (left to right, ~8cm):
+  [User] → [Login Form] → [POST /api/auth/login] → [Valid Credentials?]
+  On "No":  [Show Error] → loops back to [Login Form]
+  On "Yes": continues downward to Row 2
+
+ROW 2 — TOKEN STORAGE (below Row 1):
+  [Receive JWT Tokens] → [Access Token (In Memory)]
+                        → [Refresh Token (localStorage)]
+
+ROW 3 — REDIRECT (below Row 2):
+  [Redirect to Home]
+
+ROW 4 — TOKEN REFRESH FLOW (right side, below Row 3):
+  [API Request] → [401 Response?]
+  On "No":      loops back up to [API Request]
+  On "Yes":     → [POST /auth/refresh] → [Refresh OK?]
+  On "Yes":     → [Retry Request] → loops back to [API Request]
+  On "No":      → [Clear Tokens] → loops back to [Login Form]
+
+===============================================================================
+FIGURE 4: Frontend Internal Architecture (fig-frontend-architecture.png)
+===============================================================================
+
+TITLE: Frontend Internal Architecture
+
+THREE-LAYER LAYOUT with External Services below:
+
+LAYER 1 — UI LAYER: React Components (top, blue box)
+  Contains 5 component groups:
+  - Pages                (Home, Login, Player, Quiz, Dashboard, etc.)
+  - Shared Components    (Navbar, Footer, Toast, Skeleton, Rating)
+  - Layout Components    (Educator layout, Admin panel layout)
+  - ErrorBoundary        (Global error catching)
+  - ProtectedRoute       (Auth + role-based route guard)
+  Arrow downward to Layer 2.
+
+LAYER 2 — STATE MANAGEMENT: React Context (middle, green box)
+  Contains 3 contexts:
+  - AuthContext           (User, tokens, login/signup/logout, session restore)
+  - AppContext            (Courses, enrollments, rating utilities)
+  - ToastContext          (Notification queue, auto-dismiss)
+  Arrow downward to Layer 3.
+
+LAYER 3 — SERVICE LAYER: API Communication via Axios (bottom, purple box)
+  Contains 8 service modules shown (out of 18 total):
+  - authService           (Login, signup, refresh, password reset)
+  - courseService         (Course CRUD, search, categories)
+  - enrollmentService     (Enroll, cancel, refund)
+  - paymentService        (Stripe PaymentIntent, status polling)
+  - mediaService          (Mux upload, asset management)
+  - assessmentService     (Quiz builder, submission, grading)
+  - discussionService     (Threads, posts, upvotes)
+  - certificateService    (PDF generation, verification)
+
+EXTERNAL SERVICES (below, connected by arrows):
+  - NestJS Backend        (REST API — all 8+ services communicate here)
+  - Stripe                (Payment processing API)
+  - Mux Video             (Video upload, transcoding, playback)
+
+ANNOTATION:
+  - Token Refresh Interceptor (side note): Attaches Bearer tokens to requests,
+    queues concurrent 401 responses, performs a single refresh call, replays
+    all queued requests with the new token, redirects to /login on failure.
+===============================================================================
